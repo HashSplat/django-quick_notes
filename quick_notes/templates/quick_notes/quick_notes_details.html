@@ -1,0 +1,7 @@
+{# this is some other template that you want to display #}
+{% extends quick_notes/base.html %}
+{% load quick_notes_tags %}
+
+{% block content %}
+    {% quick_note_card quick_note %}
+{% endblock %}

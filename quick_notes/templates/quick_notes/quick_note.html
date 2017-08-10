@@ -1,0 +1,169 @@
+{% load static %}
+
+{% block page_header %}
+    <!-- load paste_image -->
+    <link rel="stylesheet" type="text/css" href="{% static 'paste_image/paste_image.css' %}" />
+    <script src="{% static 'paste_image/paste_image.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="mui-panel">{% block panel %}{% endblock %}</div>
+{% endblock %}
+
+
+
+<div class="card" id="panel-{{ quick_note.id }}">
+    {% if form %}
+    <form method="post" action="{% url 'test_notes:update_note_card' note.id %}" id="form-{{ note.id }}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mui-select">
+            <label>Category</label>
+            <select name="category">
+                {% for cate in note.all_categories %}
+                   <option value="{{cate.id}}"
+                       {% if cate == note.category %}selected="selected"{% endif %}>
+                       {{cate.name}}
+                   </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mui-select">
+            <label>Test</label>
+            <select name="test">
+                {% for test in note.all_tests %}1
+                   <option value="{{test.id}}"
+                       {% if test == note.test %}selected="selected"{% endif %}>
+                       {{test.name}}
+                   </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mui-textfield">
+            <label>Description</label>
+            <textarea name="description">{{ form.description.value }}</textarea>
+        </div>
+
+        <div id="ExistingFiles">
+            <h3 class="mui--divider-bottom">Existing Files</h3>
+            {% for nf in note.notefile_set.all %}
+                <div style="float: left">
+                    {% if nf.is_image %}
+                        <img class="paste_image_target" src="{{ nf.file.url }}">
+                    {% else %}
+                        <p>{{ nf.file.name }}</p>
+                    {% endif %}
+                    <br/>
+                    <input type="checkbox" id="Delete{{nf.id}}" name="Delete{{forloop.counter0}}" value="{{ nf.id }}">
+                    <label for="Delete{{nf.id}}">Delete File?</label>
+                </div>
+            {% empty %}
+                <p>No files exist!</p>
+            {% endfor %}
+            <div style="clear: left">
+        </div>
+
+        <div id="pasted_images_container">
+            <h3 class="mui--divider-bottom">Images</h3>
+            <p>Paste an image anywhere on the web page to add an image.</p>
+            <div id="pasted_images"></div>
+        </div>
+
+        <div id="files" class="mui-textfield">
+            <h3 class="mui--divider-bottom">Attach Files</h3>
+            <input type="file" name="file0">
+            <button id="add_file_option_btn" class="mui-btn mui-btn--small mui-btn--primary" style="display:block">Add File</button>
+        </div>
+
+
+        <button type="submit" class="mui-btn mui-btn--primary">Save</button>
+    </form>
+
+    <script type="text/javascript">
+        var frm = $('#form-{{ note.id }}');
+
+        frm.submit(function(event){
+            event.preventDefault();
+            $.ajax({
+                type: frm.attr('method'),
+                url: frm.attr('action'),
+                data: frm.serialize(),
+                success: function (data) {
+                    $("#panel-{{ note.id }}").replaceWith(data);
+                }
+            });
+        });
+
+        function reset_file_indexes(){
+            var inputs = $('[name^=file]');
+            for(var i in inputs){
+                inputs[i].name = "file" + i.toString();
+            }
+        }
+
+        $("#add_file_option_btn").click(function(event){
+            event.preventDefault();
+            var new_file = document.createElement("input");
+            new_file.type = "file";
+            new_file.name = "file" + $('#files').length.toString();
+            new_file.style = "width: 90%; display: inline";
+            var remove_file_option_btn = document.createElement("button");
+            remove_file_option_btn.innerHTML = "X";
+            remove_file_option_btn.onclick = function(event){
+                event.preventDefault();
+                var parent = new_file.parentElement;
+                parent.removeChild(new_file);
+                parent.removeChild(remove_file_option_btn);
+                $('#files').append($("#add_file_option_btn"));
+                reset_file_indexes();
+            };
+
+            $('#files').append(new_file);
+            $('#files').append(remove_file_option_btn);
+            $('#files').append($("#add_file_option_btn"));
+            reset_file_indexes();
+        });
+    </script>
+
+    {% else %}
+
+    <h2 class="mui--divider-bottom">Note taken on {{ note.date }}</h2>
+    <p>
+        <h3 style="margin-bottom:4px;"><strong>Category:</strong> {{ note.category }}</h3>
+        <h3 style="margin-bottom:4px;"><strong>Test:</strong> {{ note.test }}</h3>
+        <h3 style="margin-bottom:4px;"><strong>Created By:</strong> {{ note.user }}</h3>
+        <h3 style="margin-bottom:4px;"><strong>Description:</strong><p>{{ note.description }}</p></h3>
+        <h3 class="mui--divider-bottom">Images</h3>
+            {% for nf in note.notefile_set.all %}
+                {% if nf.is_image %}
+                    <img class="paste_image_target" src="{{ nf.file.url }}">
+                {% endif %}
+            {% empty %}
+                <p>No images exist!</p>
+            {% endfor %}
+        <h3 class="mui--divider-bottom">Files</h3>
+            {% for nf in note.notefile_set.all %}
+                {% if nf.is_image is False %}
+                    <img src="{{ nf.file.url }}">
+                {% endif %}
+            {% empty %}
+                <p>No files exist!</p>
+            {% endfor %}
+    </p>
+    <a id="btn-{{ note.id }}" class="mui-btn mui-btn--small mui-btn--primary mui-btn--fab" style="padding:0.5em;"><i class="material-icons">mode_edit</i></a>
+
+    <script type="text/javascript">
+        $("#btn-{{ note.id }}").click(function(event){
+            event.preventDefault();
+            $.ajax({
+                type:"get",
+                url:"{% url 'test_notes:update_note_card' note.id %}",
+                data: {"update_note": "{{ note.id }}" },
+
+                success: function(data) {
+                    $("#panel-{{ note.id }}").replaceWith(data);
+                }
+            });
+       });
+    </script>
+    {% endif %}
+</div>

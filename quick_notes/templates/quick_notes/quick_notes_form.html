@@ -1,0 +1,13 @@
+{# this is some other template that you want to display #}
+{% extends "quick_notes/base.html" %}
+{% load quick_notes_tags %}
+
+{% block content %}
+    <form method="post" enctype="multipart/form-data" action="">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <input type="submit">
+    </form>
+
+{% endblock %}

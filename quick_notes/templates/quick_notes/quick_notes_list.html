@@ -1,0 +1,9 @@
+{% extends "quick_notes/base.html" %}
+
+{% load quick_notes_tags %}
+
+{% block content %}
+    {% for note in quick_notes_list %}
+        {% quick_note_card note %}
+    {% endfor %}
+{% endblock %}

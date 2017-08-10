@@ -1,0 +1,5 @@
+django
+
+# Don't forget to add "taggit" to your Installed apps.
+django-taggit
+
